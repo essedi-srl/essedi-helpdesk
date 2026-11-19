@@ -1,0 +1,30 @@
+/*
+ * Strato di stile comune Essedi per Frappe Helpdesk (tecnici e portale clienti).
+ *
+ * Fonti:
+ *  - guida del marchio Essedi (rebranding 2026): corallo #FB5057 colore del marchio;
+ *  - guida UI delle app interne (Narnia) per pulsanti, stati e tabelle:
+ *    pulsante primario #1c2333, corallo riservato a errori e azioni distruttive.
+ *
+ * Cambia solo variabili del tema chiaro di frappe-ui: nessun selettore di componente,
+ * così un aggiornamento di Helpdesk non rompe l'interfaccia. Il tema scuro resta quello
+ * originale.
+ */
+:root:not([data-theme="dark"]) {
+  /* Pulsante primario (Crea, Invia, Chiudi...): accento scuro Narnia */
+  --surface-gray-10: #1c2333;
+  --surface-gray-9: #2b3447;
+  --surface-gray-8: #3b465c;
+
+  /* Azioni distruttive ed errori: corallo Essedi */
+  --surface-red-6: #fc6a70;
+  --surface-red-7: #fb5057;
+  --surface-red-8: #e8444b;
+  --surface-red-9: #cf3a40;
+
+  /* Bordo del campo attivo: corallo leggero */
+  --focus-outline-default: 2px solid rgba(251, 80, 87, 0.45);
+
+  /* Barra laterale: grigio di fondo delle pagine Narnia */
+  --surface-sidebar: #f6f6f6;
+}
