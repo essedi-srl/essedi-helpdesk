@@ -2,9 +2,10 @@
 
 from helpdesk.helpdesk.doctype.hd_ticket.hd_ticket import HDTicket
 
-# Campi riservati ai tecnici: sul server sono al livello di permesso 8, che i clienti
-# non leggono. Nell'elenco del portale resterebbero colonne vuote, quindi le togliamo.
-COLONNE_NASCOSTE_AL_CLIENTE = {"priority", "agent_group"}
+# Campi riservati ai tecnici (Team, Priorità, scadenze SLA): sul server sono al livello
+# di permesso 8, che i clienti non leggono. Nell'elenco del portale resterebbero colonne
+# vuote, quindi le togliamo.
+COLONNE_NASCOSTE_AL_CLIENTE = {"priority", "agent_group", "response_by", "resolution_by"}
 
 
 class EssediHDTicket(HDTicket):
