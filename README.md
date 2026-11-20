@@ -71,6 +71,19 @@ il codice di Helpdesk resta intatto e aggiornabile.
   Impostazioni del sito web. La registrazione libera deve restare disattivata
   (`disable_signup` in Impostazioni del sito web): gli account dei clienti si creano
   dall'Helpdesk.
+- **Stati dei ticket** (DocType HD Ticket Status):
+  - colore (campo `color`) secondo la guida Narnia: blu = tocca a noi (Aperto),
+    grigio = attesa del cliente o concluso (In attesa del cliente, Chiuso), viola = fermo
+    per un motivo esterno (In attesa del produttore, In spedizione), verde = Risolto.
+    Il rosso resta allo SLA non rispettato. Il foglio di stile porta verde e viola ai
+    valori esatti di Narnia;
+  - **l'etichetta per i tecnici (`label_agent`) deve restare uguale al nome dello stato**
+    (`Open`, `Replied`, `Resolved`, `Closed` per quelli standard): il nome dello stato
+    nasce da quel campo e l'interfaccia ritrova lo stato di un ticket confrontandoli. Con
+    un'etichetta diversa elenco, portale e intestazione del ticket non mostrano più lo
+    stato (pallino nero, "Stato —"), e salvando lo stato Frappe la riporta comunque al
+    nome. Il testo italiano per i tecnici lo mette lo script dei testi italiani;
+  - l'etichetta per i clienti (`label_customer`) si può scrivere liberamente in italiano.
 
 ## Regole del repository
 

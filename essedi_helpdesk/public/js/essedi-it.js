@@ -139,6 +139,14 @@
     "Label": "Etichetta",
     "Width": "Larghezza",
 
+    // Stati standard dei ticket per i tecnici. Il loro nome interno (Open, Replied...)
+    // deve restare uguale all'etichetta per i tecnici, altrimenti Helpdesk non riconosce
+    // lo stato: la traduzione si fa qui. Valgono anche per la legenda della dashboard.
+    "Open": "Aperto",
+    "Replied": "In attesa del cliente",
+    "Resolved": "Risolto",
+    "Closed": "Chiuso",
+
     // Priorità (valori standard)
     "Low": "Bassa",
     "Medium": "Media",
@@ -234,8 +242,6 @@
     "Avg. Feedback Rating": "Valutazione media",
     "Ticket Trend": "Andamento dei ticket",
     "Date": "Data",
-    "Open": "Aperti",
-    "Closed": "Chiusi",
     "Feedback Trend": "Andamento delle valutazioni",
     "No feedback data": "Nessuna valutazione",
     "Feedback insights will appear once responses are collected.":
