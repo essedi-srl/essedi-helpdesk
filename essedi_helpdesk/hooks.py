@@ -11,3 +11,8 @@ after_request = ["essedi_helpdesk.style.inject_style"]
 
 # Elenco ticket del portale clienti senza le colonne riservate ai tecnici
 override_doctype_class = {"HD Ticket": "essedi_helpdesk.overrides.EssediHDTicket"}
+
+# Menu Filtro senza i campi che l'utente non può leggere (per i clienti: Priorità, SLA)
+override_whitelisted_methods = {
+	"helpdesk.api.doc.get_filterable_fields": "essedi_helpdesk.overrides.get_filterable_fields"
+}
