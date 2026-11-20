@@ -6,9 +6,9 @@
  *  - guida UI delle app interne (Narnia) per pulsanti, stati e tabelle:
  *    pulsante primario #1c2333, corallo riservato a errori e azioni distruttive.
  *
- * Cambia solo variabili del tema chiaro di frappe-ui: nessun selettore di componente,
- * così un aggiornamento di Helpdesk non rompe l'interfaccia. Il tema scuro resta quello
- * originale.
+ * Cambia quasi solo variabili del tema chiaro di frappe-ui, così un aggiornamento di
+ * Helpdesk non rompe l'interfaccia. L'unica eccezione è il logo della barra laterale,
+ * in fondo al file. Il tema scuro resta quello originale.
  */
 :root:not([data-theme="dark"]) {
   /* Pulsante primario (Crea, Invia, Chiudi...): accento scuro Narnia */
@@ -27,4 +27,14 @@
 
   /* Barra laterale: grigio di fondo delle pagine Narnia */
   --surface-sidebar: #f6f6f6;
+}
+
+/*
+ * Logo della barra laterale: Helpdesk lo mostra in un riquadro di 32x32 px e lo ritaglia
+ * (object-cover). Lo mostriamo intero dentro il riquadro, senza tagliarne i bordi.
+ * Il logo da caricare in Impostazioni Helpdesk è l'icona quadrata, non il logo esteso.
+ * Se Helpdesk cambia questo elemento, la regola smette di agire e torna il ritaglio.
+ */
+img[alt="Brand Logo"] {
+  object-fit: contain;
 }
