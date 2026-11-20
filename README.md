@@ -33,6 +33,11 @@ il codice di Helpdesk resta intatto e aggiornabile.
   predefinite del cliente Priorità, Team e le scadenze SLA (prima risposta e risoluzione),
   che sono riservati ai tecnici (vedi sotto) e resterebbero vuote. Helpdesk le definisce nel
   codice, quindi l'app estende il controller di HD Ticket (`override_doctype_class`).
+- **Menu Filtro** (`essedi_helpdesk/overrides.py`, `override_whitelisted_methods`): toglie
+  dai campi proposti quelli che l'utente non può leggere per livello di permesso. Helpdesk
+  propone ai clienti un elenco fisso con Priorità e scadenze SLA: il server blocca già il
+  filtro su quei campi, ma il cliente vedrebbe la voce e poi un errore. Per i tecnici
+  l'elenco non cambia.
 
 ## Configurazione richiesta
 
