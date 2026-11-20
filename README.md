@@ -13,6 +13,10 @@ il codice di Helpdesk resta intatto e aggiornabile.
   il `<link>` alle pagine `/helpdesk`, che non offrono un punto di estensione per i CSS.
   Il link porta la versione dell'app (`?v=`), così i browser scaricano il foglio nuovo
   a ogni rilascio.
+- **Elenco ticket del portale clienti** (`essedi_helpdesk/overrides.py`): toglie dalle colonne
+  predefinite del cliente Priorità, Team e le scadenze SLA (prima risposta e risoluzione),
+  che sono riservati ai tecnici (vedi sotto) e resterebbero vuote. Helpdesk le definisce nel
+  codice, quindi l'app estende il controller di HD Ticket (`override_doctype_class`).
 
 ## Configurazione richiesta
 
@@ -20,6 +24,21 @@ il codice di Helpdesk resta intatto e aggiornabile.
   quadrata del marchio, non il logo esteso. Helpdesk lo mostra in un riquadro di 32x32 px;
   un logo largo resterebbe illeggibile anche intero. Il logo esteso può restare nelle
   impostazioni del sito web (pagina di accesso).
+- **Campi del ticket riservati ai tecnici**: vanno al livello di permesso 8, che i ruoli
+  cliente non leggono:
+  - Team (`agent_group`) e Priorità (`priority`);
+  - tutti i campi dello SLA: `sla`, `response_by`, `resolution_by`, `first_responded_on`,
+    `resolution_date`, `first_response_time`, `resolution_time`,
+    `first_response_failed_by`, `resolution_failed_by` (`agreement_status` è già al
+    livello 8). Senza il campo `sla` il portale non mostra nessuna scadenza;
+  - i campi personalizzati interni (per Essedi: stato del contratto e commerciale del
+    cliente).
+
+  Per i campi standard si usa un Property Setter `permlevel`, per quelli personalizzati il
+  campo `permlevel` del Custom Field. Nascondere un campo nel modello del ticket ("Visible
+  to: Agents") non basta: lo toglie dalla pagina del portale ma il cliente può ancora
+  leggerlo via API. I campi dello SLA continuano a essere calcolati e salvati anche quando
+  il cliente apre un ticket o risponde.
 
 ## Regole del repository
 
