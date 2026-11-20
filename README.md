@@ -10,7 +10,8 @@ il codice di Helpdesk resta intatto e aggiornabile.
   corallo per errori e azioni distruttive). Agisce sulle variabili CSS di frappe-ui; l'unica
   regola su un elemento specifico mostra intero il logo della barra laterale.
 - **Inserimento del foglio di stile** (`essedi_helpdesk/style.py`): un hook `after_request` aggiunge
-  il `<link>` alle pagine `/helpdesk`, che non offrono un punto di estensione per i CSS.
+  il `<link>` alle pagine `/helpdesk` e alle pagine di accesso di Frappe (`/login`,
+  `/update-password`), che non offrono un punto di estensione per i CSS.
   Il link porta la versione dell'app (`?v=`), così i browser scaricano il foglio nuovo
   a ogni rilascio.
 - **Elenco ticket del portale clienti** (`essedi_helpdesk/overrides.py`): toglie dalle colonne
@@ -39,6 +40,17 @@ il codice di Helpdesk resta intatto e aggiornabile.
   to: Agents") non basta: lo toglie dalla pagina del portale ma il cliente può ancora
   leggerlo via API. I campi dello SLA continuano a essere calcolati e salvati anche quando
   il cliente apre un ticket o risponde.
+- **Pagina di accesso**: è quella standard di Frappe (`/login`). I testi si cambiano con
+  il DocType Translation (lingua `it`), senza toccare il codice:
+  - `Welcome! Please sign in to continue.`: frase sotto "Accedi", per dire che è il
+    portale assistenza;
+  - `jane@example.com`: esempio nel campo email;
+  - `Login with Email Link`: pulsante per entrare con un link via email.
+
+  Il nome mostrato da Frappe è in Impostazioni di sistema (`app_name`), il logo in
+  Impostazioni del sito web. La registrazione libera deve restare disattivata
+  (`disable_signup` in Impostazioni del sito web): gli account dei clienti si creano
+  dall'Helpdesk.
 
 ## Regole del repository
 

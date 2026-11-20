@@ -6,7 +6,7 @@ app_email = "info@essedisrl.eu"
 app_license = "AGPL-3.0"
 required_apps = ["helpdesk"]
 
-# Foglio di stile Essedi nelle pagine /helpdesk (tecnici e portale clienti)
+# Foglio di stile Essedi nelle pagine /helpdesk (tecnici e portale clienti) e di accesso
 after_request = ["essedi_helpdesk.style.inject_style"]
 
 # Elenco ticket del portale clienti senza le colonne riservate ai tecnici
