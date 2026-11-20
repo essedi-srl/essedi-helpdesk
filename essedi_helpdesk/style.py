@@ -1,8 +1,9 @@
-"""Aggiunge il foglio di stile Essedi alle pagine dell'Helpdesk.
+"""Aggiunge il foglio di stile Essedi alle pagine dell'Helpdesk e alla pagina di accesso.
 
 La pagina /helpdesk di Helpdesk e' un file HTML generato in fase di build e non offre
 punti in cui aggiungere fogli di stile. Invece di modificarla, inseriamo un <link> nella
 risposta HTML, subito prima di </head>, cosi' il codice di Helpdesk resta intatto.
+Lo stesso vale per le pagine di accesso di Frappe, da cui passano tecnici e clienti.
 """
 
 import frappe
@@ -11,9 +12,12 @@ from essedi_helpdesk import __version__
 
 CSS_HREF = "/assets/essedi_helpdesk/css/essedi.css"
 
+# Pagine di Frappe da cui si entra nell'Helpdesk: accesso e scelta della nuova password
+PAGINE_DI_ACCESSO = ("/login", "/update-password")
 
-def _is_helpdesk_page(path: str) -> bool:
-	return path == "/helpdesk" or path.startswith("/helpdesk/")
+
+def _is_styled_page(path: str) -> bool:
+	return path == "/helpdesk" or path.startswith("/helpdesk/") or path in PAGINE_DI_ACCESSO
 
 
 def inject_style(response=None, request=None):
@@ -21,7 +25,7 @@ def inject_style(response=None, request=None):
 	try:
 		if response is None or request is None:
 			return
-		if not _is_helpdesk_page(request.path or ""):
+		if not _is_styled_page(request.path or ""):
 			return
 		if response.mimetype != "text/html" or response.direct_passthrough:
 			return
