@@ -8,3 +8,6 @@ required_apps = ["helpdesk"]
 
 # Foglio di stile Essedi nelle pagine /helpdesk (tecnici e portale clienti)
 after_request = ["essedi_helpdesk.style.inject_style"]
+
+# Elenco ticket del portale clienti senza le colonne riservate ai tecnici
+override_doctype_class = {"HD Ticket": "essedi_helpdesk.overrides.EssediHDTicket"}
