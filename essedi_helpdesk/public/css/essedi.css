@@ -7,8 +7,8 @@
  *    pulsante primario #1c2333, corallo riservato a errori e azioni distruttive.
  *
  * Cambia quasi solo variabili del tema chiaro di frappe-ui, così un aggiornamento di
- * Helpdesk non rompe l'interfaccia. L'unica eccezione è il logo della barra laterale,
- * in fondo al file. Il tema scuro resta quello originale.
+ * Helpdesk non rompe l'interfaccia. Le eccezioni (logo della barra laterale, pallini
+ * degli stati) sono in fondo al file. Il tema scuro resta quello originale.
  */
 :root:not([data-theme="dark"]) {
   /* Pulsante primario (Crea, Invia, Chiudi...): accento scuro Narnia */
@@ -37,4 +37,20 @@
  */
 img[alt="Brand Logo"] {
   object-fit: contain;
+}
+
+/*
+ * Pallino colorato degli stati dei ticket (elenco, intestazione del ticket, portale).
+ * Il colore di ogni stato si sceglie in configurazione (HD Ticket Status, campo color),
+ * seguendo la guida Narnia: blu = tocca a noi, grigio = attesa o concluso, viola = fermo
+ * per un motivo esterno (produttore, spedizione), verde = risolto; il rosso resta allo SLA
+ * non rispettato. Helpdesk disegna il pallino con colori fissi, senza variabili: qui
+ * portiamo verde e viola ai valori di Narnia (#22c55e, #7c3aed). Se Helpdesk cambia
+ * queste classi, il pallino torna al colore originale, che resta simile.
+ */
+:root:not([data-theme="dark"]) .\!text-green-500 {
+  color: #22c55e !important;
+}
+:root:not([data-theme="dark"]) .\!text-violet-500 {
+  color: #7c3aed !important;
 }
