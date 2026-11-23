@@ -13,7 +13,22 @@ il codice di Helpdesk resta intatto e aggiornabile.
   il `<link>` alle pagine `/helpdesk` e alle pagine di accesso di Frappe (`/login`,
   `/update-password`), che non offrono un punto di estensione per i CSS.
   Il link porta la versione dell'app (`?v=`), così i browser scaricano il foglio nuovo
-  a ogni rilascio.
+  a ogni rilascio. Nelle pagine `/helpdesk` lo stesso hook aggiunge anche lo script dei
+  testi italiani (sotto).
+- **Testi italiani** (`essedi_helpdesk/public/js/essedi-it.js`): una parte dell'interfaccia
+  di Helpdesk ha i testi scritti fissi in inglese nel codice (intestazioni dell'elenco,
+  campi e operatori dei filtri, schede del ticket, scadenze SLA, tempi relativi come
+  "2 hours ago", editor, base di conoscenza, dashboard) e i record Translation non li
+  cambiano. Lo script li sostituisce nella pagina dopo che Helpdesk li ha disegnati:
+  - traduce solo i testi che corrispondono esattamente a una voce dell'elenco `T` o a
+    uno dei modelli `MODELLI` (tempi, scadenze, date brevi, "Set ...");
+  - non tocca editor, campi di testo e contenuto delle email;
+  - si attiva solo se la pagina è in italiano (`<html lang="it">`).
+
+  Prima di aggiungere una voce, controlla se il testo si traduce già con un record
+  Translation: lo script serve solo per quelli che non passano dalla traduzione di Frappe.
+  Dopo un aggiornamento di Helpdesk un testo nuovo o cambiato resta in inglese finché non
+  lo si aggiunge all'elenco.
 - **Elenco ticket del portale clienti** (`essedi_helpdesk/overrides.py`): toglie dalle colonne
   predefinite del cliente Priorità, Team e le scadenze SLA (prima risposta e risoluzione),
   che sono riservati ai tecnici (vedi sotto) e resterebbero vuote. Helpdesk le definisce nel
@@ -101,6 +116,10 @@ bench build --app essedi_helpdesk
 3. Fare un backup, indicare il nuovo tag nel `docker-compose.yml` e lanciare
    `docker compose up -d`.
 4. `bench --site <sito> migrate` nel container backend.
+5. Se è cambiata anche la versione di Helpdesk, aprire elenco, ticket e portale clienti e
+   controllare che non siano comparsi testi in inglese: vanno aggiunti a
+   `essedi_helpdesk/public/js/essedi-it.js` (o a un record Translation, se il testo passa
+   dalla traduzione di Frappe).
 
 Concordare con il responsabile IT giorno e orario prima di aggiornare l'installazione in uso.
 
