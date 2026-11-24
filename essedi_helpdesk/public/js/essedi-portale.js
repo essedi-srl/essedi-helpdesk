@@ -11,6 +11,9 @@
  *  - Modulo di apertura: al tentativo di invio si evidenziano tutti i campi obbligatori
  *    vuoti (Helpdesk ne segnala uno alla volta) e, nel modulo cliente, il menu Impatto
  *    non mostra la voce vuota iniziale.
+ *  - Modulo di apertura del cliente: referente e sede si propongono già compilati con i
+ *    dati dell'account (metodo essedi_helpdesk.api.dati_richiedente).
+ *  - Base di conoscenza spenta in Impostazioni Helpdesk: i clienti non la vedono.
  *
  * Il riquadro si costruisce con elementi e testo semplice, mai con HTML preso dal server.
  */
@@ -27,7 +30,18 @@
     "Searching...", "Ricerca in corso..."];
   var ID_RIQUADRO = "essedi-riquadro-ticket";
 
+  // Impostazioni scritte dal server nella pagina (style.py). Senza, il portale resta com'è.
+  var CONFIG = window.essediHelpdesk || {};
+  var KB_CLIENTI = CONFIG.kbClienti !== false;
+  var PORTALE_CLIENTE = /^\/helpdesk\/(my-tickets|kb-public)(\/|$)/;
+  var KB_CLIENTE = /^\/helpdesk\/kb-public(\/|$)/;
+  var VOCE_KB = ["Base di conoscenza", "Knowledge Base"];
+  var TITOLO_SUGGERIMENTI = ["These articles may already cover what you are looking for",
+    "Questi articoli potrebbero già rispondere alla sua domanda"];
+
   var percorsoPrecedente = location.pathname;
+  var proposte = null;     // campi precompilabili dal server (null = non ancora chiesti)
+  var compilati = {};      // campi già proposti in questa apertura del modulo
   var appenaCreato = null; // numero del ticket inviato da questa pagina
   var coperture = {};      // numero del ticket -> testo della copertura ("" se assente)
 
@@ -135,6 +149,86 @@
     }
   }
 
+  // Base di conoscenza spenta (Impostazioni Helpdesk): nel portale clienti spariscono la
+  // voce di menu e gli articoli suggeriti; le pagine pubbliche degli articoli rimandano ai
+  // ticket. La voce di menu è un pulsante della barra laterale con il testo dentro (anche
+  // a menu compresso, dove il testo è solo nascosto).
+  function testoProprio(el) {
+    return el.children.length ? "" : el.textContent.trim();
+  }
+
+  function nascondiBaseConoscenza(percorso) {
+    if (KB_CLIENTE.test(percorso)) {
+      location.replace("/helpdesk/my-tickets");
+      return;
+    }
+    if (!PORTALE_CLIENTE.test(percorso)) return;
+    var voci = document.querySelectorAll("button, .cursor-pointer");
+    for (var i = 0; i < voci.length; i++) {
+      if (VOCE_KB.indexOf(voci[i].textContent.trim()) === -1) continue;
+      // si nasconde anche il contenitore della voce, se contiene solo lei
+      var voce = voci[i], su = voce.parentElement;
+      if (su && su.textContent.trim() === voce.textContent.trim()) voce = su;
+      voce.style.display = "none";
+    }
+    var testi = document.querySelectorAll("p, span, div, h2, h3");
+    for (var j = 0; j < testi.length; j++) {
+      if (TITOLO_SUGGERIMENTI.indexOf(testoProprio(testi[j])) === -1) continue;
+      var riquadro = testi[j].closest(".border");
+      if (riquadro) riquadro.style.display = "none";
+    }
+  }
+
+  // Modulo di apertura del cliente: propone già compilati i campi che si ricavano
+  // dall'account collegato (referente e telefono dal contatto, sede dell'ultimo ticket).
+  // Il server dice quali campi e con che etichetta; si compila solo un campo vuoto, una
+  // volta per apertura del modulo, e sotto compare una nota per correggerlo.
+  function leggiProposte() {
+    if (proposte !== null) return;
+    proposte = {};
+    fetch("/api/method/essedi_helpdesk.api.dati_richiedente", {
+      credentials: "same-origin", headers: { Accept: "application/json" }
+    })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (d) {
+        proposte = (d && d.message) || {};
+        programma();
+      })
+      .catch(function () { /* niente proposte: il modulo resta vuoto */ });
+  }
+
+  function impostaValore(input, valore) {
+    var proto = input.tagName === "TEXTAREA" ? HTMLTextAreaElement.prototype : HTMLInputElement.prototype;
+    Object.getOwnPropertyDescriptor(proto, "value").set.call(input, valore);
+    input.dispatchEvent(new Event("input", { bubbles: true }));
+    input.dispatchEvent(new Event("change", { bubbles: true }));
+  }
+
+  function precompila() {
+    leggiProposte();
+    var contenitori = document.querySelectorAll(".space-y-1\\.5");
+    for (var i = 0; i < contenitori.length; i++) {
+      var etichetta = contenitori[i].firstElementChild;
+      if (!etichetta) continue;
+      var nome = etichetta.textContent.replace("*", "").trim();
+      var input = contenitori[i].querySelector("input:not([type=checkbox]), textarea");
+      if (!input) continue;
+      for (var campo in proposte) {
+        var p = proposte[campo];
+        if (compilati[campo] || !p) continue;
+        var segnaposto = input.getAttribute("placeholder") || "";
+        if ((p.segnaposti || []).indexOf(segnaposto) === -1 && p.etichetta !== nome) continue;
+        compilati[campo] = true;
+        if (input.value) continue; // il cliente ha già scritto qualcosa
+        impostaValore(input, p.valore);
+        var nota = document.createElement("div");
+        nota.className = "essedi-nota-campo";
+        nota.textContent = "Proposto dai dati del suo account: lo corregga se serve.";
+        contenitori[i].appendChild(nota);
+      }
+    }
+  }
+
   function leggiCopertura(numero) {
     if (Object.prototype.hasOwnProperty.call(coperture, numero)) return;
     coperture[numero] = undefined; // richiesta in corso
@@ -211,11 +305,16 @@
       if (m && MODULO_NUOVO.test(percorsoPrecedente)) appenaCreato = m[1];
       else if (!m || m[1] !== appenaCreato) appenaCreato = null;
       percorsoPrecedente = percorso;
+      compilati = {}; // una nuova apertura del modulo riceve di nuovo le proposte
     }
+    if (!KB_CLIENTI) nascondiBaseConoscenza(percorso);
     if (MODULO_NUOVO.test(percorso)) {
       nascondiRiquadriVuoti();
       controllaCampi(false);
-      if (percorso.indexOf("/my-tickets/") !== -1) nascondiVociVuote();
+      if (percorso.indexOf("/my-tickets/") !== -1) {
+        nascondiVociVuote();
+        precompila();
+      }
     }
     var ticket = percorso.match(TICKET_CLIENTE);
     if (ticket) mostraRiquadro(ticket[1]);

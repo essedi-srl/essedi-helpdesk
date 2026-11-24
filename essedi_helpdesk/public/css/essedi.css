@@ -104,3 +104,4 @@ img[alt="Brand Logo"] {
   font-size: 12px;
   color: #cf3a40;
 }
+.essedi-nota-campo { margin-top: 4px; font-size: 12px; color: var(--ink-gray-5, #7c7c7c); }

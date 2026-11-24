@@ -46,9 +46,25 @@ il codice di Helpdesk resta intatto e aggiornabile.
     dal server, ricontrolla la funzione `cosaSuccede`;
   - nel modulo di apertura, al tentativo di invio, evidenzia insieme tutti i campi
     obbligatori vuoti (Helpdesk ne segnala uno alla volta in un avviso in basso) e porta in
-    vista il primo; nel modulo cliente toglie la voce vuota iniziale dai menu a scelta.
+    vista il primo; nel modulo cliente toglie la voce vuota iniziale dai menu a scelta;
+  - nel modulo di apertura del cliente propone già compilati il referente («Nome Cognome,
+    telefono» dal contatto collegato all'utente) e la sede (quella dell'ultimo ticket aperto
+    dallo stesso utente), con una nota sotto il campo. Compila solo campi vuoti e il cliente
+    può correggerli. I valori arrivano da `essedi_helpdesk.api.dati_richiedente`, che legge
+    solo i dati dell'utente collegato; i nomi dei campi sono in cima a `api.py`, e lo script
+    ritrova i campi dal testo di esempio (placeholder) del modello del ticket o dall'etichetta;
+  - se in Impostazioni Helpdesk «Mostra la base di conoscenza ai clienti» è spento, nel
+    portale clienti nasconde la voce di menu Base di conoscenza e gli articoli suggeriti, e
+    le pagine pubbliche degli articoli (`/helpdesk/kb-public`) rimandano ai ticket. Per i
+    tecnici non cambia nulla.
 
   Il riquadro si costruisce con testo semplice, senza HTML preso dal server.
+- **Interruttore della base di conoscenza** (`essedi_helpdesk/setup.py`): all'installazione e
+  a ogni `migrate` l'app crea in Impostazioni Helpdesk (DocType HD Settings) il campo
+  `essedi_kb_clienti`, spento all'inizio. Si cambia dalla pagina delle impostazioni di Frappe
+  (`/app/hd-settings`, ruoli Agent Manager o System Manager): il pannello impostazioni
+  dentro l'Helpdesk non mostra i campi aggiunti. `style.py` lo passa agli script della
+  pagina come `window.essediHelpdesk`.
 - **Elenco ticket del portale clienti** (`essedi_helpdesk/overrides.py`): toglie dalle colonne
   predefinite del cliente Priorità, Team e le scadenze SLA (prima risposta e risoluzione),
   che sono riservati ai tecnici (vedi sotto) e resterebbero vuote. Helpdesk le definisce nel

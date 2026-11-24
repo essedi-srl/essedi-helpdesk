@@ -7,8 +7,12 @@ nella risposta HTML, subito prima di </head>, cosi' il codice di Helpdesk resta 
   tecnici e clienti);
 - script dei testi italiani (public/js/essedi-it.js) e degli aiuti del portale clienti
   (public/js/essedi-portale.js): solo pagine /helpdesk, perche'
-  le pagine di accesso si traducono gia' da configurazione.
+  le pagine di accesso si traducono gia' da configurazione. Prima degli script, sempre
+  nelle pagine /helpdesk, window.essediHelpdesk porta le impostazioni che usano
+  (per ora: se mostrare ai clienti la base di conoscenza).
 """
+
+import json
 
 import frappe
 
@@ -32,6 +36,15 @@ def _is_styled_page(path: str) -> bool:
 	return _is_helpdesk_page(path) or path in PAGINE_DI_ACCESSO
 
 
+def _configurazione() -> dict:
+	"""Impostazioni lette dagli script del portale (window.essediHelpdesk)."""
+	try:
+		kb = bool(frappe.db.get_single_value("HD Settings", "essedi_kb_clienti"))
+	except Exception:
+		kb = True  # campo non ancora creato (migrate non eseguito): portale come prima
+	return {"kbClienti": kb}
+
+
 def inject_style(response=None, request=None):
 	"""Hook after_request: non deve mai rompere la risposta."""
 	try:
@@ -47,6 +60,7 @@ def inject_style(response=None, request=None):
 			return
 		tags = f'<link rel="stylesheet" href="{CSS_HREF}?v={__version__}">'
 		if _is_helpdesk_page(path):
+			tags += f"<script>window.essediHelpdesk={json.dumps(_configurazione())};</script>"
 			tags += "".join(f'<script src="{src}?v={__version__}" defer></script>' for src in JS_SRC)
 		response.set_data(body.replace("</head>", tags + "</head>", 1))
 	except Exception:
