@@ -7,8 +7,12 @@ il codice di Helpdesk resta intatto e aggiornabile.
 
 - **Strato di stile comune** (`essedi_helpdesk/public/css/essedi.css`): colori del tema chiaro
   secondo la guida del marchio Essedi e la guida UI delle app interne (pulsante primario scuro,
-  corallo per errori e azioni distruttive). Agisce sulle variabili CSS di frappe-ui; l'unica
-  regola su un elemento specifico mostra intero il logo della barra laterale.
+  corallo per errori e azioni distruttive). Agisce soprattutto sulle variabili CSS di
+  frappe-ui. Le regole su elementi specifici, descritte nel file, sono poche: logo intero
+  nella barra laterale, colori dei pallini degli stati, elenco ticket del cliente leggibile
+  su schermi stretti (l'oggetto si restringe, sul telefono la colonna Creato si nasconde),
+  nome del contatto che va a capo nei dettagli del ticket e bordo dei campi obbligatori
+  mancanti. Ognuna smette semplicemente di agire se Helpdesk cambia quell'elemento.
 - **Inserimento del foglio di stile** (`essedi_helpdesk/style.py`): un hook `after_request` aggiunge
   il `<link>` alle pagine `/helpdesk` e alle pagine di accesso di Frappe (`/login`,
   `/update-password`), che non offrono un punto di estensione per i CSS.
@@ -39,7 +43,10 @@ il codice di Helpdesk resta intatto e aggiornabile.
     `copertura`, scritto dal server) con una frase su cosa succede dopo. La frase dipende
     dal testo della copertura: se contiene «preventivo» spiega il preventivo e l'assenza di
     tempi garantiti, se inizia con «Contratto» rimanda al contratto. Se cambi i testi scritti
-    dal server, ricontrolla la funzione `cosaSuccede`.
+    dal server, ricontrolla la funzione `cosaSuccede`;
+  - nel modulo di apertura, al tentativo di invio, evidenzia insieme tutti i campi
+    obbligatori vuoti (Helpdesk ne segnala uno alla volta in un avviso in basso) e porta in
+    vista il primo; nel modulo cliente toglie la voce vuota iniziale dai menu a scelta.
 
   Il riquadro si costruisce con testo semplice, senza HTML preso dal server.
 - **Elenco ticket del portale clienti** (`essedi_helpdesk/overrides.py`): toglie dalle colonne

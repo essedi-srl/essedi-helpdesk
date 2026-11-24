@@ -8,6 +8,9 @@
  *  - Dopo l'invio: in cima al ticket appena creato compare "Richiesta 0010 ricevuta".
  *  - Pagina del ticket del cliente: in cima compare la copertura del ticket (campo
  *    personalizzato "copertura", scritto dal server) con una frase su cosa succede dopo.
+ *  - Modulo di apertura: al tentativo di invio si evidenziano tutti i campi obbligatori
+ *    vuoti (Helpdesk ne segnala uno alla volta) e, nel modulo cliente, il menu Impatto
+ *    non mostra la voce vuota iniziale.
  *
  * Il riquadro si costruisce con elementi e testo semplice, mai con HTML preso dal server.
  */
@@ -59,6 +62,76 @@
         nascosti[j].style.display = "";
         nascosti[j].removeAttribute("data-essedi-nascosto");
       }
+    }
+  }
+
+  // Campi obbligatori del modulo di apertura. Helpdesk, al tentativo di invio, segnala con
+  // un avviso in basso solo il primo campo mancante e non lo evidenzia. Qui si evidenziano
+  // tutti insieme e si porta in vista il primo. Riconosce i campi dall'asterisco rosso
+  // dell'etichetta (componente FieldLabel di Helpdesk).
+  var SEGNAPOSTO = ["", "Selezioni un'opzione", "Select an option", "Scelga la categoria"];
+
+  function campiObbligatori() {
+    var campi = [];
+    var contenitori = document.querySelectorAll(".space-y-1\\.5");
+    for (var i = 0; i < contenitori.length; i++) {
+      var c = contenitori[i];
+      var etichetta = c.firstElementChild;
+      if (!etichetta || !etichetta.querySelector(".text-ink-red-6")) continue;
+      var trigger = c.querySelector("[data-slot=trigger]");
+      var input = c.querySelector("input:not([type=checkbox]), textarea");
+      if (trigger || input) campi.push({ box: c, el: trigger || input, input: input, trigger: trigger });
+    }
+    return campi;
+  }
+
+  function campoVuoto(f) {
+    var testo = (f.input ? f.input.value : "") + (f.trigger ? f.trigger.textContent : "");
+    return SEGNAPOSTO.indexOf(testo.trim()) !== -1;
+  }
+
+  function segnaCampo(f, mancante) {
+    var avviso = f.box.querySelector(".essedi-avviso-campo");
+    if (mancante) {
+      f.el.classList.add("essedi-campo-mancante");
+      if (!avviso) {
+        avviso = document.createElement("div");
+        avviso.className = "essedi-avviso-campo";
+        avviso.textContent = "Campo obbligatorio";
+        f.box.appendChild(avviso);
+      }
+    } else {
+      f.el.classList.remove("essedi-campo-mancante");
+      if (avviso) avviso.remove();
+    }
+  }
+
+  function controllaCampi(tuttiQuanti) {
+    var campi = campiObbligatori(), primo = null;
+    for (var i = 0; i < campi.length; i++) {
+      var vuoto = campoVuoto(campi[i]);
+      // dopo il primo tentativo di invio si aggiornano solo i campi già segnalati
+      if (tuttiQuanti || campi[i].el.classList.contains("essedi-campo-mancante")) {
+        segnaCampo(campi[i], vuoto);
+        if (vuoto && !primo) primo = campi[i];
+      }
+    }
+    return primo;
+  }
+
+  document.addEventListener("click", function (e) {
+    if (!MODULO_NUOVO.test(location.pathname)) return;
+    var b = e.target.closest && e.target.closest("button");
+    if (!b || b.textContent.trim() !== "Invia") return;
+    var primo = controllaCampi(true);
+    if (primo) primo.el.scrollIntoView({ block: "center", behavior: "smooth" });
+  }, true);
+
+  // Il menu Impatto del modulo cliente parte con una voce vuota, che non serve
+  function nascondiVociVuote() {
+    var voci = document.querySelectorAll("[role=listbox] [role=option]");
+    for (var i = 0; i < voci.length; i++) {
+      if (!voci[i].textContent.trim()) voci[i].style.display = "none";
     }
   }
 
@@ -139,7 +212,11 @@
       else if (!m || m[1] !== appenaCreato) appenaCreato = null;
       percorsoPrecedente = percorso;
     }
-    if (MODULO_NUOVO.test(percorso)) nascondiRiquadriVuoti();
+    if (MODULO_NUOVO.test(percorso)) {
+      nascondiRiquadriVuoti();
+      controllaCampi(false);
+      if (percorso.indexOf("/my-tickets/") !== -1) nascondiVociVuote();
+    }
     var ticket = percorso.match(TICKET_CLIENTE);
     if (ticket) mostraRiquadro(ticket[1]);
     else togliRiquadro();
@@ -159,6 +236,8 @@
     programma();
     new MutationObserver(programma).observe(document.body, { childList: true, subtree: true });
     window.addEventListener("popstate", programma);
+    // i campi di testo cambiano valore senza cambiare la pagina
+    document.addEventListener("input", programma, true);
   }
 
   if (document.body) avvia();

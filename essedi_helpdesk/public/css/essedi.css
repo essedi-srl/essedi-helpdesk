@@ -54,3 +54,53 @@ img[alt="Brand Logo"] {
 :root:not([data-theme="dark"]) .\!text-violet-500 {
   color: #7c3aed !important;
 }
+
+/*
+ * Elenco ticket del portale clienti su schermi stretti. Helpdesk dà alle colonne
+ * (selezione, ID, Oggetto, Stato, Creato) larghezze fisse nello stile della riga, così su
+ * telefono o in una finestra stretta lo stato finisce fuori schermo. La regola riconosce
+ * solo l'elenco del cliente da quelle larghezze: l'oggetto si restringe e, sul telefono,
+ * la colonna Creato si nasconde. Il contenitore dell'elenco prende la larghezza dal testo più
+ * lungo (w-max): sugli schermi stretti lo si tiene largo quanto lo schermo.
+ * Se Helpdesk cambia le larghezze, la regola smette di
+ * agire e l'elenco torna com'era.
+ */
+@media (max-width: 1024px) {
+  div.w-max:has(div.grid[style*="5rem 22rem 11rem 8rem"]) {
+    width: 100% !important;
+  }
+  div.grid[style*="5rem 22rem 11rem 8rem"] {
+    grid-template-columns: 14px 3.5rem minmax(6rem, 1fr) 9rem 6.5rem !important;
+  }
+}
+@media (max-width: 640px) {
+  div.grid[style*="5rem 22rem 11rem 8rem"] {
+    grid-template-columns: 14px 3rem minmax(0, 1fr) 7.5rem !important;
+    gap: 0.5rem !important;
+  }
+  div.grid[style*="5rem 22rem 11rem 8rem"] > :nth-child(5) {
+    display: none !important;
+  }
+}
+
+/*
+ * Nome del contatto in cima ai dettagli del ticket: Helpdesk lo taglia a 242 px, ma il
+ * nome dei contatti dei clienti contiene anche il nome dell'azienda ed è lungo. Va a capo.
+ */
+.text-2xl-medium.truncate.w-\[242px\] {
+  white-space: normal;
+  overflow-wrap: anywhere;
+  font-size: 1.125rem;
+  line-height: 1.4;
+}
+
+/* Campo obbligatorio vuoto, segnalato dallo script del portale al tentativo di invio */
+.essedi-campo-mancante {
+  border-color: #fb5057 !important;
+  box-shadow: 0 0 0 1px #fb5057 !important;
+}
+.essedi-avviso-campo {
+  margin-top: 4px;
+  font-size: 12px;
+  color: #cf3a40;
+}
