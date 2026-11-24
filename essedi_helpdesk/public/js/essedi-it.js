@@ -46,6 +46,7 @@
     "Cancel": "Annulla",
     "Update": "Aggiorna",
     "Apps": "App",
+    "No results": "Nessun risultato",
     "Italy": "Italia",
 
     // Elenco ticket: colonne, campi dei filtri, operatori
@@ -214,6 +215,17 @@
     "Cell color": "Colore della cella",
     "Delete table": "Elimina tabella",
 
+    // Articoli suggeriti mentre si scrive l'oggetto di un nuovo ticket. Nel modulo di
+    // apertura il riquadro vuoto lo nasconde lo script del portale (essedi-portale.js).
+    "These articles may already cover what you are looking for":
+      "Questi articoli potrebbero già rispondere alla sua domanda",
+    "(View All)": "(Vedi tutti)",
+    "No answers found": "Nessun articolo trovato",
+    "Rephrase the question and try again with some keywords":
+      "Provi a riformulare la domanda con altre parole chiave",
+    "Searching...": "Ricerca in corso...",
+    "Please wait while we search for the answers": "Attenda, stiamo cercando articoli utili",
+
     // Base di conoscenza
     "Knowledge Base": "Base di conoscenza",
     "Ask a question...": "Faccia una domanda...",
@@ -345,6 +357,18 @@
     if (escluso(el) || el.tagName === "SCRIPT" || el.tagName === "STYLE") return;
     var v = n.nodeValue, t = v.trim();
     if (!t || t.length > 200 || !/[A-Za-z]/.test(t)) return;
+    // Contatore in fondo agli elenchi ("4 of 4"): "of" è un pezzo di testo a sé, quindi si
+    // traduce solo se l'elemento che lo contiene (o il suo contenitore) è esattamente
+    // "numero of numero".
+    if (t === "of") {
+      var conteggio = /^\d+\s*of\s*\d+$/;
+      var su = el.parentElement;
+      if (conteggio.test((el.textContent || "").trim()) ||
+          (su && conteggio.test((su.textContent || "").trim()))) {
+        n.nodeValue = v.replace("of", "di");
+      }
+      return;
+    }
     var it = traduci(t);
     if (it !== null && it !== t) n.nodeValue = v.replace(t, it);
   }

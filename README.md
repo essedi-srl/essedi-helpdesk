@@ -7,14 +7,18 @@ il codice di Helpdesk resta intatto e aggiornabile.
 
 - **Strato di stile comune** (`essedi_helpdesk/public/css/essedi.css`): colori del tema chiaro
   secondo la guida del marchio Essedi e la guida UI delle app interne (pulsante primario scuro,
-  corallo per errori e azioni distruttive). Agisce sulle variabili CSS di frappe-ui; l'unica
-  regola su un elemento specifico mostra intero il logo della barra laterale.
+  corallo per errori e azioni distruttive). Agisce soprattutto sulle variabili CSS di
+  frappe-ui. Le regole su elementi specifici, descritte nel file, sono poche: logo intero
+  nella barra laterale, colori dei pallini degli stati, elenco ticket del cliente leggibile
+  su schermi stretti (l'oggetto si restringe, sul telefono la colonna Creato si nasconde),
+  nome del contatto che va a capo nei dettagli del ticket e bordo dei campi obbligatori
+  mancanti. Ognuna smette semplicemente di agire se Helpdesk cambia quell'elemento.
 - **Inserimento del foglio di stile** (`essedi_helpdesk/style.py`): un hook `after_request` aggiunge
   il `<link>` alle pagine `/helpdesk` e alle pagine di accesso di Frappe (`/login`,
   `/update-password`), che non offrono un punto di estensione per i CSS.
   Il link porta la versione dell'app (`?v=`), così i browser scaricano il foglio nuovo
-  a ogni rilascio. Nelle pagine `/helpdesk` lo stesso hook aggiunge anche lo script dei
-  testi italiani (sotto).
+  a ogni rilascio. Nelle pagine `/helpdesk` lo stesso hook aggiunge anche gli script dei
+  testi italiani e degli aiuti del portale (sotto).
 - **Testi italiani** (`essedi_helpdesk/public/js/essedi-it.js`): una parte dell'interfaccia
   di Helpdesk ha i testi scritti fissi in inglese nel codice (intestazioni dell'elenco,
   campi e operatori dei filtri, schede del ticket, scadenze SLA, tempi relativi come
@@ -29,6 +33,38 @@ il codice di Helpdesk resta intatto e aggiornabile.
   Translation: lo script serve solo per quelli che non passano dalla traduzione di Frappe.
   Dopo un aggiornamento di Helpdesk un testo nuovo o cambiato resta in inglese finché non
   lo si aggiunge all'elenco.
+- **Aiuti del portale clienti** (`essedi_helpdesk/public/js/essedi-portale.js`), caricato
+  dallo stesso hook nelle pagine `/helpdesk`:
+  - nel modulo di apertura nasconde il riquadro degli articoli suggeriti quando non ne trova
+    (o mentre li cerca): con una base di conoscenza ancora vuota sembrava un errore. Se ci
+    sono articoli pertinenti il riquadro resta;
+  - dopo l'invio mostra in cima al ticket «Richiesta 0010 ricevuta»;
+  - nella pagina del ticket del cliente mostra in cima la copertura (campo personalizzato
+    `copertura`, scritto dal server) con una frase su cosa succede dopo. La frase dipende
+    dal testo della copertura: se contiene «preventivo» spiega il preventivo e l'assenza di
+    tempi garantiti, se inizia con «Contratto» rimanda al contratto. Se cambi i testi scritti
+    dal server, ricontrolla la funzione `cosaSuccede`;
+  - nel modulo di apertura, al tentativo di invio, evidenzia insieme tutti i campi
+    obbligatori vuoti (Helpdesk ne segnala uno alla volta in un avviso in basso) e porta in
+    vista il primo; nel modulo cliente toglie la voce vuota iniziale dai menu a scelta;
+  - nel modulo di apertura del cliente propone già compilati il referente («Nome Cognome,
+    telefono» dal contatto collegato all'utente) e la sede (quella dell'ultimo ticket aperto
+    dallo stesso utente), con una nota sotto il campo. Compila solo campi vuoti e il cliente
+    può correggerli. I valori arrivano da `essedi_helpdesk.api.dati_richiedente`, che legge
+    solo i dati dell'utente collegato; i nomi dei campi sono in cima a `api.py`, e lo script
+    ritrova i campi dal testo di esempio (placeholder) del modello del ticket o dall'etichetta;
+  - se in Impostazioni Helpdesk «Mostra la base di conoscenza ai clienti» è spento, nel
+    portale clienti nasconde la voce di menu Base di conoscenza e gli articoli suggeriti, e
+    le pagine pubbliche degli articoli (`/helpdesk/kb-public`) rimandano ai ticket. Per i
+    tecnici non cambia nulla.
+
+  Il riquadro si costruisce con testo semplice, senza HTML preso dal server.
+- **Interruttore della base di conoscenza** (`essedi_helpdesk/setup.py`): all'installazione e
+  a ogni `migrate` l'app crea in Impostazioni Helpdesk (DocType HD Settings) il campo
+  `essedi_kb_clienti`, spento all'inizio. Si cambia dalla pagina delle impostazioni di Frappe
+  (`/app/hd-settings`, ruoli Agent Manager o System Manager): il pannello impostazioni
+  dentro l'Helpdesk non mostra i campi aggiunti. `style.py` lo passa agli script della
+  pagina come `window.essediHelpdesk`.
 - **Elenco ticket del portale clienti** (`essedi_helpdesk/overrides.py`): toglie dalle colonne
   predefinite del cliente Priorità, Team e le scadenze SLA (prima risposta e risoluzione),
   che sono riservati ai tecnici (vedi sotto) e resterebbero vuote. Helpdesk le definisce nel
@@ -137,7 +173,9 @@ bench build --app essedi_helpdesk
 5. Se è cambiata anche la versione di Helpdesk, aprire elenco, ticket e portale clienti e
    controllare che non siano comparsi testi in inglese: vanno aggiunti a
    `essedi_helpdesk/public/js/essedi-it.js` (o a un record Translation, se il testo passa
-   dalla traduzione di Frappe).
+   dalla traduzione di Frappe). Controllare anche, come cliente, il modulo di apertura e la
+   pagina del ticket: gli aiuti del portale dipendono dalla struttura delle pagine di
+   Helpdesk.
 
 Concordare con il responsabile IT giorno e orario prima di aggiornare l'installazione in uso.
 

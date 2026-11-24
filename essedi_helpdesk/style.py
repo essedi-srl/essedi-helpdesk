@@ -5,16 +5,24 @@ punti in cui aggiungere fogli di stile o script. Invece di modificarla, inseriam
 nella risposta HTML, subito prima di </head>, cosi' il codice di Helpdesk resta intatto.
 - foglio di stile: pagine /helpdesk e pagine di accesso di Frappe (da cui passano
   tecnici e clienti);
-- script dei testi italiani (public/js/essedi-it.js): solo pagine /helpdesk, perche'
-  le pagine di accesso si traducono gia' da configurazione.
+- script dei testi italiani (public/js/essedi-it.js) e degli aiuti del portale clienti
+  (public/js/essedi-portale.js): solo pagine /helpdesk, perche'
+  le pagine di accesso si traducono gia' da configurazione. Prima degli script, sempre
+  nelle pagine /helpdesk, window.essediHelpdesk porta le impostazioni che usano
+  (per ora: se mostrare ai clienti la base di conoscenza).
 """
+
+import json
 
 import frappe
 
 from essedi_helpdesk import __version__
 
 CSS_HREF = "/assets/essedi_helpdesk/css/essedi.css"
-JS_SRC = "/assets/essedi_helpdesk/js/essedi-it.js"
+JS_SRC = (
+	"/assets/essedi_helpdesk/js/essedi-it.js",
+	"/assets/essedi_helpdesk/js/essedi-portale.js",
+)
 
 # Pagine di Frappe da cui si entra nell'Helpdesk: accesso e scelta della nuova password
 PAGINE_DI_ACCESSO = ("/login", "/update-password")
@@ -26,6 +34,15 @@ def _is_helpdesk_page(path: str) -> bool:
 
 def _is_styled_page(path: str) -> bool:
 	return _is_helpdesk_page(path) or path in PAGINE_DI_ACCESSO
+
+
+def _configurazione() -> dict:
+	"""Impostazioni lette dagli script del portale (window.essediHelpdesk)."""
+	try:
+		kb = bool(frappe.db.get_single_value("HD Settings", "essedi_kb_clienti"))
+	except Exception:
+		kb = True  # campo non ancora creato (migrate non eseguito): portale come prima
+	return {"kbClienti": kb}
 
 
 def inject_style(response=None, request=None):
@@ -43,7 +60,8 @@ def inject_style(response=None, request=None):
 			return
 		tags = f'<link rel="stylesheet" href="{CSS_HREF}?v={__version__}">'
 		if _is_helpdesk_page(path):
-			tags += f'<script src="{JS_SRC}?v={__version__}" defer></script>'
+			tags += f"<script>window.essediHelpdesk={json.dumps(_configurazione())};</script>"
+			tags += "".join(f'<script src="{src}?v={__version__}" defer></script>' for src in JS_SRC)
 		response.set_data(body.replace("</head>", tags + "</head>", 1))
 	except Exception:
 		frappe.log_error(title="essedi_helpdesk: stile non applicato")

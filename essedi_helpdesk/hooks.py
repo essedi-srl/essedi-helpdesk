@@ -16,3 +16,7 @@ override_doctype_class = {"HD Ticket": "essedi_helpdesk.overrides.EssediHDTicket
 override_whitelisted_methods = {
 	"helpdesk.api.doc.get_filterable_fields": "essedi_helpdesk.overrides.get_filterable_fields"
 }
+
+# Interruttore "Mostra la base di conoscenza ai clienti" in Impostazioni Helpdesk
+after_install = "essedi_helpdesk.setup.crea_campi"
+after_migrate = ["essedi_helpdesk.setup.crea_campi"]
