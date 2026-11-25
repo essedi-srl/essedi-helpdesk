@@ -61,10 +61,24 @@ il codice di Helpdesk resta intatto e aggiornabile.
   Il riquadro si costruisce con testo semplice, senza HTML preso dal server.
 - **Interruttore della base di conoscenza** (`essedi_helpdesk/setup.py`): all'installazione e
   a ogni `migrate` l'app crea in Impostazioni Helpdesk (DocType HD Settings) il campo
-  `essedi_kb_clienti`, spento all'inizio. Si cambia dalla pagina delle impostazioni di Frappe
+  `essedi_kb_clienti`, spento all'inizio. Allo stesso modo crea sul contatto il campo
+  `essedi_partita_iva` usato dalla registrazione. Si cambia dalla pagina delle impostazioni di Frappe
   (`/app/hd-settings`, ruoli Agent Manager o System Manager): il pannello impostazioni
   dentro l'Helpdesk non mostra i campi aggiunti. `style.py` lo passa agli script della
   pagina come `window.essediHelpdesk`.
+- **Registrazione con i dati aziendali** (`essedi_helpdesk/templates/signup.html`,
+  `essedi_helpdesk/registrazione.py`): il modulo «Registrati» della pagina di accesso chiede,
+  oltre a nome ed email, azienda e telefono (obbligatori) e partita IVA (facoltativa).
+  - Il modulo sostituisce quello di Frappe con l'hook `signup_form_template`. È una copia
+    di `frappe/templates/signup.html` con gli stessi id per nome ed email, perché li usa lo
+    script di accesso di Frappe. Uno script nel modulo aggiunge i campi in più alla chiamata.
+    Dopo un aggiornamento di Frappe confronta le due versioni.
+  - `registrazione.sign_up` sostituisce `frappe.core.doctype.user.user.sign_up`
+    (`override_whitelisted_methods`). Controlla i dati in più, lascia a Frappe la creazione
+    dell'utente e poi li scrive sul contatto: azienda in `company_name`, telefono come numero
+    principale, partita IVA nel campo `essedi_partita_iva`, che l'app crea su Contact. Se
+    l'utente esisteva già, non cambia nulla. L'azienda indicata è solo un testo: non collega
+    il contatto alla scheda cliente (vedi Registrazione dei clienti sotto).
 - **Elenco ticket del portale clienti** (`essedi_helpdesk/overrides.py`): toglie dalle colonne
   predefinite del cliente Priorità, Team e le scadenze SLA (prima risposta e risoluzione),
   che sono riservati ai tecnici (vedi sotto) e resterebbero vuote. Helpdesk le definisce nel
@@ -104,9 +118,21 @@ il codice di Helpdesk resta intatto e aggiornabile.
   - `Login with Email Link`: pulsante per entrare con un link via email.
 
   Il nome mostrato da Frappe è in Impostazioni di sistema (`app_name`), il logo in
-  Impostazioni del sito web. La registrazione libera deve restare disattivata
-  (`disable_signup` in Impostazioni del sito web): gli account dei clienti si creano
-  dall'Helpdesk.
+  Impostazioni del sito web.
+- **Registrazione dei clienti**: si apre togliendo `disable_signup` in Impostazioni del sito
+  web; il ruolo dato a chi si registra è `default_role` in Impostazioni del portale (per
+  Helpdesk: `HD Customer`). Il modulo con i dati aziendali è dell'app (vedi sopra). Frappe
+  crea solo l'utente: il contatto e il collegamento alla scheda cliente si fanno in
+  configurazione, con due Server Script (DocType Event):
+  - su User, After Insert: per gli utenti del sito web crea il contatto con la stessa email
+    e lo collega all'utente (se il contatto esiste già, gli imposta l'utente);
+  - su Contact, After Insert: se il dominio della mail corrisponde al campo `domain` di una
+    sola scheda cliente (HD Customer, più domini separati da virgola), aggiunge il contatto
+    ai suoi membri (`contacts`). Esclude i domini di posta generici (gmail, libero, outlook…):
+    quei contatti li collega un tecnico, aiutandosi con l'azienda indicata.
+
+  Helpdesk collega un ticket al cliente solo tramite i membri della scheda cliente, non
+  con il Dynamic Link del contatto né con il campo `domain`.
 - **Stati dei ticket** (DocType HD Ticket Status):
   - colore (campo `color`) secondo la guida Narnia: blu = tocca a noi (Aperto),
     grigio = attesa del cliente o concluso (In attesa del cliente, Chiuso), viola = fermo
