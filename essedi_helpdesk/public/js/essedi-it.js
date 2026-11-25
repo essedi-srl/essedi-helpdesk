@@ -308,6 +308,9 @@
     [/^Set (.+)\.\.\.$/, function (m, f) { return "Imposta " + (T[f] || f) + "..."; }],
     [/^(.+) is required$/, function (m, f) { return "Campo obbligatorio: " + (T[f] || f); }],
     [/^Hide (.+)$/, function (m, f) { return T[f] ? "Nascondi " + T[f] : null; }],
+    // Attività del ticket: "<persona> cleared SLA", "<persona> set Priority to High"
+    [/^cleared (.+)$/, function (m, f) { return "ha svuotato il campo " + (T[f] || f); }],
+    [/^set (.+) to (.+)$/, function (m, f, v) { return "ha impostato " + (T[f] || f) + " su " + (T[v] || v); }],
     [/^Average tickets per day is around (.+)$/, function (m, n) { return "In media circa " + n + " ticket al giorno"; }],
     // Date brevi: "Nov 20, 9:28 am" -> "20 nov, 9:28" (anche dentro un testo, es. "scade Nov 23, 9:28 am")
     [/\b(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) (\d{1,2}), (\d{1,2}):(\d{2}) ?([AaPp][Mm])\b/g,
