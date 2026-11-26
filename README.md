@@ -53,6 +53,18 @@ il codice di Helpdesk resta intatto e aggiornabile.
     può correggerli. I valori arrivano da `essedi_helpdesk.api.dati_richiedente`, che legge
     solo i dati dell'utente collegato; i nomi dei campi sono in cima a `api.py`, e lo script
     ritrova i campi dal testo di esempio (placeholder) del modello del ticket o dall'etichetta;
+  - nel modulo di apertura del cliente, se nella descrizione c'è solo il testo guida del
+    modello del ticket (Helpdesk abilita Invia anche così), Invia evidenzia la descrizione con
+    un avviso invece di partire. Le righe della guida arrivano da `dati_richiedente`
+    (`__guida`, dal modello `Default`); la regola, meno di 10 caratteri oltre la guida, è la
+    stessa del Server Script che rifiuta comunque il ticket sul server (vedi Configurazione
+    richiesta);
+  - in cima al modulo di apertura del cliente mostra la copertura prima dell'invio
+    (`__copertura` da `dati_richiedente`), con la stessa frase della pagina del ticket: il
+    cliente sa prima di inviare se l'intervento è a preventivo;
+  - nel portale clienti aggiunge accanto alla graffetta dell'editor (solo icona) la scritta
+    «Allega foto o file», che apre la stessa scelta del file, e fa chiedere conferma a
+    «Scarta» prima di cancellare un testo scritto (Helpdesk svuota l'editor senza chiedere);
   - se in Impostazioni Helpdesk «Mostra la base di conoscenza ai clienti» è spento, nel
     portale clienti nasconde la voce di menu Base di conoscenza e gli articoli suggeriti, e
     le pagine pubbliche degli articoli (`/helpdesk/kb-public`) rimandano ai ticket. Per i
@@ -133,6 +145,14 @@ il codice di Helpdesk resta intatto e aggiornabile.
 
   Helpdesk collega un ticket al cliente solo tramite i membri della scheda cliente, non
   con il Dynamic Link del contatto né con il campo `domain`.
+- **Copertura e descrizione dei ticket** (Server Script su HD Ticket):
+  - Before Validate: scrive sul ticket `copertura` e `stato_contratto` dai campi della
+    scheda cliente (`stato_contratto`, `livello_contratto`, `scadenza_contratto`).
+    `copertura_utente` in `api.py` ripete gli stessi testi per mostrarli nel modulo prima
+    dell'invio: se cambi i testi nello script, cambiali anche lì;
+  - Before Insert: per i ticket aperti dal portale da chi non è tecnico, rifiuta la
+    descrizione se, tolte le righe del testo guida, restano meno di 10 caratteri. Se cambi il
+    testo guida del modello `Default`, aggiorna anche l'elenco delle righe nello script.
 - **Stati dei ticket** (DocType HD Ticket Status):
   - colore (campo `color`) secondo la guida Narnia: blu = tocca a noi (Aperto),
     grigio = attesa del cliente o concluso (In attesa del cliente, Chiuso), viola = fermo
