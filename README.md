@@ -65,6 +65,9 @@ il codice di Helpdesk resta intatto e aggiornabile.
   - nel portale clienti aggiunge accanto alla graffetta dell'editor (solo icona) la scritta
     «Allega foto o file», che apre la stessa scelta del file, e fa chiedere conferma a
     «Scarta» prima di cancellare un testo scritto (Helpdesk svuota l'editor senza chiedere);
+    nel modulo di apertura «Scarta» annulla tutta la richiesta (oggetto, campi e
+    descrizione) e riporta il cliente all'elenco dei ticket, con conferma se ha già scritto
+    qualcosa;
   - se in Impostazioni Helpdesk «Mostra la base di conoscenza ai clienti» è spento, nel
     portale clienti nasconde la voce di menu Base di conoscenza e gli articoli suggeriti, e
     le pagine pubbliche degli articoli (`/helpdesk/kb-public`) rimandano ai ticket. Per i
