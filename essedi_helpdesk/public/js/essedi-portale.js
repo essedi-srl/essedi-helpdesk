@@ -14,6 +14,11 @@
  *  - Modulo di apertura del cliente: referente e sede si propongono già compilati con i
  *    dati dell'account (metodo essedi_helpdesk.api.dati_richiedente).
  *  - Base di conoscenza spenta in Impostazioni Helpdesk: i clienti non la vedono.
+ *  - Modulo di apertura del cliente: se nella descrizione c'è solo il testo guida, Invia
+ *    evidenzia la descrizione invece di partire (il server rifiuta comunque il ticket);
+ *    in cima compare la copertura del cliente (preventivo o contratto) prima dell'invio.
+ *  - Portale clienti: accanto alla graffetta dell'editor compare "Allega foto o file" e
+ *    "Scarta" chiede conferma prima di cancellare un testo scritto.
  *
  * Il riquadro si costruisce con elementi e testo semplice, mai con HTML preso dal server.
  */
@@ -138,7 +143,129 @@
     var b = e.target.closest && e.target.closest("button");
     if (!b || b.textContent.trim() !== "Invia") return;
     var primo = controllaCampi(true);
-    if (primo) primo.el.scrollIntoView({ block: "center", behavior: "smooth" });
+    var descrizione = controllaDescrizione(true);
+    if (descrizione) {
+      // solo testo guida: il server rifiuterebbe il ticket, qui lo si dice sul campo
+      e.preventDefault();
+      e.stopImmediatePropagation();
+    }
+    var daMostrare = primo ? primo.el : descrizione;
+    if (daMostrare) daMostrare.scrollIntoView({ block: "center", behavior: "smooth" });
+  }, true);
+
+  // Descrizione del modulo cliente: parte con il testo guida del modello del ticket
+  // (righe in proposte.__guida). Se tolte quelle righe restano meno di 10 caratteri, il
+  // server rifiuta il ticket (Server Script "descrizione obbligatoria dal portale").
+  var AVVISO_DESCRIZIONE = "Descriva il problema sotto le domande guida: cosa succede, " +
+    "da quando e cosa avete già provato.";
+
+  function testoScritto(editor) {
+    var guida = (proposte && proposte.__guida) || [];
+    var righe = [];
+    var blocchi = editor.querySelectorAll("p, li, h1, h2, h3");
+    if (!blocchi.length) blocchi = [editor];
+    for (var i = 0; i < blocchi.length; i++) {
+      var t = blocchi[i].textContent.replace(/\s+/g, " ").trim();
+      for (var g = 0; g < guida.length; g++) t = t.split(guida[g]).join(" ");
+      righe.push(t);
+    }
+    return righe.join(" ").replace(/\s+/g, " ").trim();
+  }
+
+  function contenitoreEditor(editor) {
+    return editor.closest(".rounded-4") || editor.parentElement;
+  }
+
+  // Restituisce il riquadro dell'editor se la descrizione è da completare (e la segnala)
+  function controllaDescrizione(tentativo) {
+    if (location.pathname.indexOf("/my-tickets/") === -1) return null;
+    if (!proposte || !proposte.__guida) return null; // senza guida decide il server
+    var editor = document.querySelector(".ProseMirror");
+    if (!editor) return null;
+    var box = contenitoreEditor(editor);
+    var segnalato = box.classList.contains("essedi-campo-mancante");
+    if (!tentativo && !segnalato) return null;
+    var vuota = testoScritto(editor).length < 10;
+    var avviso = box.nextElementSibling;
+    if (avviso && !avviso.classList.contains("essedi-avviso-descrizione")) avviso = null;
+    if (vuota) {
+      box.classList.add("essedi-campo-mancante");
+      if (!avviso) {
+        avviso = document.createElement("div");
+        avviso.className = "essedi-avviso-campo essedi-avviso-descrizione";
+        avviso.textContent = AVVISO_DESCRIZIONE;
+        box.insertAdjacentElement("afterend", avviso);
+      }
+      return box;
+    }
+    box.classList.remove("essedi-campo-mancante");
+    if (avviso) avviso.remove();
+    return null;
+  }
+
+  // Copertura del cliente in cima al modulo, prima dell'invio (proposte.__copertura)
+  var ID_COPERTURA_MODULO = "essedi-copertura-modulo";
+
+  function mostraCoperturaModulo() {
+    var copertura = proposte && proposte.__copertura;
+    var esistente = document.getElementById(ID_COPERTURA_MODULO);
+    if (!copertura) {
+      if (esistente) esistente.remove();
+      return;
+    }
+    var oggetto = document.querySelector("input[placeholder='Breve descrizione del problema']") ||
+      document.querySelector(".ProseMirror");
+    var colonna = oggetto && oggetto.closest(".max-w-4xl");
+    if (!colonna) return;
+    if (esistente && esistente.parentNode === colonna) return;
+    if (esistente) esistente.remove();
+    var box = document.createElement("div");
+    box.id = ID_COPERTURA_MODULO;
+    box.className = "essedi-copertura-modulo";
+    box.setAttribute("role", "note");
+    box.appendChild(riga(copertura, "Copertura:"));
+    var dopo = cosaSuccede(copertura);
+    if (dopo) box.appendChild(riga(dopo, null));
+    if (/preventivo/i.test(copertura)) box.classList.add("essedi-copertura-preventivo");
+    colonna.insertBefore(box, colonna.firstChild);
+  }
+
+  // Graffetta dell'editor (solo icona): accanto si aggiunge "Allega foto o file", che apre
+  // la stessa scelta del file. Utile soprattutto da telefono.
+  function etichettaAllegati() {
+    var icone = document.querySelectorAll(".lucide-paperclip");
+    for (var i = 0; i < icone.length; i++) {
+      var pulsante = icone[i].closest("button");
+      var radice = pulsante && pulsante.parentElement;
+      if (!radice || radice.getAttribute("data-essedi-allega")) continue;
+      radice.setAttribute("data-essedi-allega", "1");
+      var link = document.createElement("button");
+      link.type = "button";
+      link.className = "essedi-allega";
+      link.textContent = "Allega foto o file";
+      link.addEventListener("click", (function (p) {
+        return function () { p.click(); };
+      })(pulsante));
+      radice.insertAdjacentElement("afterend", link);
+    }
+  }
+
+  // "Scarta" svuota l'editor senza chiedere: nel portale clienti chiede prima conferma,
+  // se c'è testo scritto oltre al testo guida.
+  document.addEventListener("click", function (e) {
+    if (!PORTALE_CLIENTE.test(location.pathname)) return;
+    var b = e.target.closest && e.target.closest("button");
+    if (!b || b.textContent.trim() !== "Scarta") return;
+    // editor dello stesso riquadro: il primo antenato del pulsante che contiene un editor
+    var editor = null;
+    for (var su = b.parentElement; su && !editor; su = su.parentElement) {
+      editor = su.querySelector(".ProseMirror");
+    }
+    if (!editor || !testoScritto(editor)) return;
+    if (!window.confirm("Vuole cancellare il testo che ha scritto?")) {
+      e.preventDefault();
+      e.stopImmediatePropagation();
+    }
   }, true);
 
   // Il menu Impatto del modulo cliente parte con una voce vuota, che non serve
@@ -215,7 +342,7 @@
       if (!input) continue;
       for (var campo in proposte) {
         var p = proposte[campo];
-        if (compilati[campo] || !p) continue;
+        if (campo.indexOf("__") === 0 || compilati[campo] || !p) continue; // __guida, __copertura
         var segnaposto = input.getAttribute("placeholder") || "";
         if ((p.segnaposti || []).indexOf(segnaposto) === -1 && p.etichetta !== nome) continue;
         compilati[campo] = true;
@@ -314,8 +441,11 @@
       if (percorso.indexOf("/my-tickets/") !== -1) {
         nascondiVociVuote();
         precompila();
+        controllaDescrizione(false);
+        mostraCoperturaModulo();
       }
     }
+    if (PORTALE_CLIENTE.test(percorso)) etichettaAllegati();
     var ticket = percorso.match(TICKET_CLIENTE);
     if (ticket) mostraRiquadro(ticket[1]);
     else togliRiquadro();
