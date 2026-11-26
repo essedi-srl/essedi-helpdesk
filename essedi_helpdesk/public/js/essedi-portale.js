@@ -18,7 +18,8 @@
  *    evidenzia la descrizione invece di partire (il server rifiuta comunque il ticket);
  *    in cima compare la copertura del cliente (preventivo o contratto) prima dell'invio.
  *  - Portale clienti: accanto alla graffetta dell'editor compare "Allega foto o file" e
- *    "Scarta" chiede conferma prima di cancellare un testo scritto.
+ *    "Scarta" chiede conferma prima di cancellare un testo scritto; nel modulo di
+ *    apertura annulla tutta la richiesta e torna all'elenco dei ticket.
  *
  * Il riquadro si costruisce con elementi e testo semplice, mai con HTML preso dal server.
  */
@@ -250,8 +251,21 @@
     }
   }
 
-  // "Scarta" svuota l'editor senza chiedere: nel portale clienti chiede prima conferma,
-  // se c'è testo scritto oltre al testo guida.
+  // Torna all'elenco dei ticket del cliente con il router di Helpdesk (senza ricaricare);
+  // se il router non si trova, carica la pagina.
+  function tornaAiTicket() {
+    var app = document.querySelector("#app");
+    var vue = app && app.__vue_app__;
+    var router = vue && vue.config.globalProperties.$router;
+    if (router) router.push("/my-tickets");
+    else location.assign("/helpdesk/my-tickets");
+  }
+
+  // "Scarta" svuota l'editor senza chiedere. Nel portale clienti:
+  //  - nel modulo di apertura annulla tutta la richiesta e torna all'elenco dei ticket
+  //    (Helpdesk non salva la bozza: uscendo dalla pagina oggetto e campi si perdono),
+  //    chiedendo conferma se il cliente ha scritto oggetto o descrizione;
+  //  - nella pagina di un ticket chiede conferma prima di cancellare la risposta scritta.
   document.addEventListener("click", function (e) {
     if (!PORTALE_CLIENTE.test(location.pathname)) return;
     var b = e.target.closest && e.target.closest("button");
@@ -261,7 +275,19 @@
     for (var su = b.parentElement; su && !editor; su = su.parentElement) {
       editor = su.querySelector(".ProseMirror");
     }
-    if (!editor || !testoScritto(editor)) return;
+    var scritto = editor ? testoScritto(editor) : "";
+    if (MODULO_NUOVO.test(location.pathname)) {
+      e.preventDefault();
+      e.stopImmediatePropagation();
+      var oggetto = document.querySelector("input[placeholder='Breve descrizione del problema']");
+      if ((scritto || (oggetto && oggetto.value.trim())) &&
+          !window.confirm("Vuole annullare questa richiesta? Quello che ha scritto andrà perso.")) {
+        return;
+      }
+      tornaAiTicket();
+      return;
+    }
+    if (!scritto) return;
     if (!window.confirm("Vuole cancellare il testo che ha scritto?")) {
       e.preventDefault();
       e.stopImmediatePropagation();
